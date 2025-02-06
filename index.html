@@ -3,47 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Şəkil Çək</title>
+    <title>Video Yükləyici</title>
 </head>
 <body>
-
-    <h1>Ön Kameradan Şəkil Çək</h1>
-    <button onclick="startCamera()">Kameranı Aç</button>
-    <br>
-    <video id="video" width="640" height="480" autoplay></video>
-    <br>
-    <canvas id="canvas" width="640" height="480"></canvas>
-    <br>
-    <button onclick="takePicture()">Şəkil Çək</button>
-    <button onclick="downloadPicture()">Şəkli Yüklə</button>
+    <h2>Video Yükləyici</h2>
+    <input type="text" id="videoLink" placeholder="Video linkini daxil edin">
+    <button onclick="yukle()">Yüklə</button>
+    <p id="status"></p>
 
     <script>
-        let videoElement = document.getElementById("video");
-        let canvasElement = document.getElementById("canvas");
-        let canvasContext = canvasElement.getContext("2d");
+        function yukle() {
+            let link = document.getElementById("videoLink").value;
+            if (!link) {
+                alert("Zəhmət olmasa, link daxil edin!");
+                return;
+            }
 
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    videoElement.srcObject = stream;
-                })
-                .catch(function(error) {
-                    console.error("Kamera açılmadı: ", error);
-                });
-        }
-
-        function takePicture() {
-            canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-        }
-
-        function downloadPicture() {
-            const dataUrl = canvasElement.toDataURL();
-            const link = document.createElement("a");
-            link.href = dataUrl;
-            link.download = "selfie.png";
-            link.click();
+            fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: link })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("status").innerHTML = `<a href="${data.filename}" download>Videonu yüklə</a>`;
+                } else {
+                    document.getElementById("status").innerText = "Xəta baş verdi!";
+                }
+            })
+            .catch(error => {
+                console.error("Xəta:", error);
+                document.getElementById("status").innerText = "Xəta baş verdi!";
+            });
         }
     </script>
-
 </body>
 </html>
